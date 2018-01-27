@@ -23,8 +23,8 @@ logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
-secret_id = os.environ["SECRET_ID"]
-secret_key = os.environ["SECRET_KEY"]
+secret_id = os.environ["SECRET_ID"].decode('utf-8')
+secret_key = os.environ["SECRET_KEY"].decode('utf-8')
 appid = 1252448703
 region = 'guangzhou'
 bucket = u'tieduv4'
