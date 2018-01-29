@@ -14,6 +14,7 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 region = os.environ["REGION"]
 appid = os.environ["APPID"]
 test_bucket = os.environ["BUCKET"]
+test_object = 'test.txt'
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 conf = CosConfig(
     Appid=appid,
