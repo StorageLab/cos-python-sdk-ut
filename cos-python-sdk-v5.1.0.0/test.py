@@ -86,10 +86,8 @@ def test_put_get_delete_object_10MB():
         get_response = client.get_object(
             Bucket=test_bucket,
             Key=file_name,
-            ResponseCacheControl='private'
         )
         assert etag == get_response['ETag']
-        assert 'private' == get_response['Cache-Control']
         download_fp = get_response['Body'].get_raw_stream()
         assert download_fp
         # delete object
