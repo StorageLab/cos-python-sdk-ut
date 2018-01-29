@@ -11,16 +11,16 @@ from qcloud_cos import CosServiceError
 
 SECRET_ID = os.environ["SECRET_ID"]
 SECRET_KEY = os.environ["SECRET_KEY"]
-test_bucket = "test01-1252448703"
+region = os.environ["REGION"]
+test_bucket = os.environ["BUCKET"]
 test_object = "test.txt"
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 conf = CosConfig(
-    Region="ap-beijing-1",
+    Region=region,
     Secret_id=SECRET_ID,
     Secret_key=SECRET_KEY
 )
 client = CosS3Client(conf)
-
 
 def get_raw_md5(data):
     m2 = hashlib.md5(data)
@@ -384,7 +384,7 @@ def test_get_bucket_location():
     response = client.get_bucket_location(
         Bucket=test_bucket
     )
-    assert response['LocationConstraint'] == "ap-beijing-1"
+    assert response['LocationConstraint'] == region
 
 
 def test_get_service():
@@ -591,9 +591,9 @@ def test_upload_empty_file():
 
 def test_copy_10G_file_in_same_region():
     """同园区的拷贝,应该直接用copy_object接口,可以直接秒传"""
-    copy_source = {'Bucket': 'test01-1252448703', 'Key': '10G.txt', 'Region': 'ap-beijing-1'}
+    copy_source = {'Bucket': 'testv5-1252448703', 'Key': '10G.txt', 'Region': 'rfb'}
     response = client.copy(
-        Bucket='test04-1252448703',
+        Bucket='testcopy-1252448703',
         Key='10G.txt',
         CopySource=copy_source,
         MAXThread=10
