@@ -12,12 +12,14 @@ from qcloud_cos import CosServiceError
 SECRET_ID = os.environ["SECRET_ID"]
 SECRET_KEY = os.environ["SECRET_KEY"]
 region = os.environ["REGION"]
+appid = os.environ["APPID"]
 test_bucket = os.environ["BUCKET"]
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 conf = CosConfig(
+    Appid=appid,
     Region=region,
-    Secret_id=SECRET_ID,
-    Secret_key=SECRET_KEY
+    Access_id=SECRET_ID,
+    Access_key=SECRET_KEY
 )
 client = CosS3Client(conf)
 
@@ -82,11 +84,9 @@ def test_put_get_delete_object_10MB():
         # get object
         get_response = client.get_object(
             Bucket=test_bucket,
-            Key=file_name,
-            ResponseCacheControl='private'
+            Key=file_name
         )
         assert etag == get_response['ETag']
-        assert 'private' == get_response['Cache-Control']
         download_fp = get_response['Body'].get_raw_stream()
         assert download_fp
         # delete object
