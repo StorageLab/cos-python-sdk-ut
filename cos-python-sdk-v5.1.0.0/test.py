@@ -17,8 +17,8 @@ test_object = "test.txt"
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 conf = CosConfig(
     Region=region,
-    Secret_id=SECRET_ID,
-    Secret_key=SECRET_KEY
+    Access_id=SECRET_ID,
+    Access_key=SECRET_KEY
 )
 client = CosS3Client(conf)
 
