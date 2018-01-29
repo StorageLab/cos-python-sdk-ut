@@ -11,11 +11,11 @@ from qcloud_cos import CosServiceError
 
 SECRET_ID = os.environ["SECRET_ID"]
 SECRET_KEY = os.environ["SECRET_KEY"]
-test_bucket = "test01-1252448703"
-test_object = "test.txt"
+region = os.environ["REGION"]
+test_bucket = os.environ["BUCKET"]
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 conf = CosConfig(
-    Region="ap-beijing-1",
+    Region=region,
     Secret_id=SECRET_ID,
     Secret_key=SECRET_KEY
 )
