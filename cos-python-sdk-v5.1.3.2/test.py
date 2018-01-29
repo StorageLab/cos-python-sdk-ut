@@ -591,7 +591,7 @@ def test_upload_empty_file():
 
 def test_copy_10G_file_in_same_region():
     """同园区的拷贝,应该直接用copy_object接口,可以直接秒传"""
-    copy_source = {'Bucket': 'testv5-1252448703', 'Key': '10G.txt', 'Region': 'rfb'}
+    copy_source = {'Bucket': 'testv5-1252448703', 'Key': '10G.txt', 'Region': 'yfb'}
     response = client.copy(
         Bucket='testcopy-1252448703',
         Key='10G.txt',
