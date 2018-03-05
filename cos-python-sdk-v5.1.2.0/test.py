@@ -142,8 +142,8 @@ def test_put_object_non_exist_bucket():
         )
     except CosServiceError as e:
         print_error_msg(e)
-
-def test_copy_object_diff_bucket():
+        
+def skip_test_copy_object_diff_bucket():
     """从另外的bucket拷贝object"""
     copy_source = {'Bucket': 'test04-1252448703', 'Key': '/test.txt', 'Region': 'ap-beijing-1'}
     response = client.copy_object(
