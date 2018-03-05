@@ -162,7 +162,7 @@ def test_get_object_acl():
     assert response
 
 
-def test_copy_object_diff_bucket():
+def skip_test_copy_object_diff_bucket():
     """从另外的bucket拷贝object"""
     copy_source = {'Bucket': 'test04-1252448703', 'Key': '/test.txt', 'Region': 'ap-beijing-1'}
     response = client.copy_object(
@@ -230,7 +230,7 @@ def test_create_complete_multipart_upload():
     )
 
 
-def test_upload_part_copy():
+def skip_test_upload_part_copy():
     """创建一个分块上传，上传分块拷贝，列出分块，完成分块上传"""
     # create
     response = client.create_multipart_upload(
@@ -564,7 +564,7 @@ def test_upload_file_multithreading():
     print ed - st
 
 
-def test_copy_file_automatically():
+def skip_test_copy_file_automatically():
     """根据拷贝源文件的大小自动选择拷贝策略，不同园区,小于5G直接copy_object，大于5G分块拷贝"""
     copy_source = {'Bucket': 'testtiedu-1252448703', 'Key': '/thread_1MB', 'Region': 'ap-guangzhou'}
     response = client.copy(
@@ -590,7 +590,7 @@ def test_upload_empty_file():
         )
 
 
-def test_copy_10G_file_in_same_region():
+def skip_test_copy_10G_file_in_same_region():
     """同园区的拷贝,应该直接用copy_object接口,可以直接秒传"""
     copy_source = {'Bucket': 'testv5-1252448703', 'Key': '10G.txt', 'Region': 'yfb'}
     response = client.copy(
