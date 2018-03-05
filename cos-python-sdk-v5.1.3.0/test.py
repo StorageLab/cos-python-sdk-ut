@@ -161,7 +161,7 @@ def test_get_object_acl():
     )
     assert response
 
-
+"""
 def skip_test_copy_object_diff_bucket():
     """从另外的bucket拷贝object"""
     copy_source = {'Bucket': 'test04-1252448703', 'Key': '/test.txt', 'Region': 'ap-beijing-1'}
@@ -171,7 +171,7 @@ def skip_test_copy_object_diff_bucket():
         CopySource=copy_source
     )
     assert response
-
+"""
 
 def test_create_abort_multipart_upload():
     """创建一个分块上传，然后终止它"""
@@ -229,7 +229,7 @@ def test_create_complete_multipart_upload():
         MultipartUpload={'Part': lst}
     )
 
-
+"""
 def skip_test_upload_part_copy():
     """创建一个分块上传，上传分块拷贝，列出分块，完成分块上传"""
     # create
@@ -278,7 +278,7 @@ def skip_test_upload_part_copy():
         UploadId=uploadid,
         MultipartUpload={'Part': lst}
     )
-
+"""
 
 def test_delete_multiple_objects():
     """批量删除文件"""
@@ -563,7 +563,7 @@ def test_upload_file_multithreading():
         os.remove(file_name)
     print ed - st
 
-
+"""
 def skip_test_copy_file_automatically():
     """根据拷贝源文件的大小自动选择拷贝策略，不同园区,小于5G直接copy_object，大于5G分块拷贝"""
     copy_source = {'Bucket': 'testtiedu-1252448703', 'Key': '/thread_1MB', 'Region': 'ap-guangzhou'}
@@ -573,7 +573,7 @@ def skip_test_copy_file_automatically():
         CopySource=copy_source,
         MAXThread=10
     )
-
+"""
 
 def test_upload_empty_file():
     """上传一个空文件,不能返回411错误"""
@@ -589,7 +589,7 @@ def test_upload_empty_file():
             ContentDisposition='download.txt'
         )
 
-
+"""
 def skip_test_copy_10G_file_in_same_region():
     """同园区的拷贝,应该直接用copy_object接口,可以直接秒传"""
     copy_source = {'Bucket': 'testv5-1252448703', 'Key': '10G.txt', 'Region': 'yfb'}
@@ -599,7 +599,7 @@ def skip_test_copy_10G_file_in_same_region():
         CopySource=copy_source,
         MAXThread=10
     )
-
+"""
 
 def test_use_get_auth():
     """测试利用get_auth方法直接生产签名,然后访问COS"""
