@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 secret_id = os.environ["SECRET_ID"].decode('utf-8')
 secret_key = os.environ["SECRET_KEY"].decode('utf-8')
-appid = 1252448703
+appid = int(os.environ["APPID"])
 region = os.environ["REGION"].decode('utf-8')
 bucket = os.environ["BUCKET"].decode('utf-8')
 cos_client = CosClient(appid, secret_id, secret_key, region)

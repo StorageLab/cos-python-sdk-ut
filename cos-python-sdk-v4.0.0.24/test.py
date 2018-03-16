@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 secret_id = os.environ["SECRET_ID"].decode('utf-8')
 secret_key = os.environ["SECRET_KEY"].decode('utf-8')
-appid = 1252448703
+appid = int(os.environ["APPID"])
 region = os.environ["REGION"].decode('utf-8')
 bucket = os.environ["BUCKET"].decode('utf-8')
 cos_client = CosClient(appid, secret_id, secret_key, region)
@@ -140,7 +140,6 @@ def test_list_folder_use_delimiter():
     request.set_prefix(u'test')
     request.set_delimiter(u'/')
     list_folder_ret = cos_client.list_folder(request)
-    print list_folder_ret
     assert list_folder_ret['code'] == 0
 
 def test_delete_folder():
