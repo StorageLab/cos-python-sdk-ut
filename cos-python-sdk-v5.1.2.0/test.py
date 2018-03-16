@@ -13,7 +13,7 @@ SECRET_ID = os.environ["SECRET_ID"]
 SECRET_KEY = os.environ["SECRET_KEY"]
 region = os.environ["REGION"]
 appid = os.environ["APPID"]
-test_bucket = os.environ["BUCKET"]
+test_bucket = 'python-v5-test'
 test_object = 'test.txt'
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 conf = CosConfig(
@@ -144,7 +144,6 @@ def test_put_object_non_exist_bucket():
         print_error_msg(e)
 
 
-'''
 def test_copy_object_diff_bucket():
     """从另外的bucket拷贝object"""
     copy_source = {'Bucket': 'test04-1252448703', 'Key': '/test.txt', 'Region': 'ap-beijing-1'}
@@ -154,7 +153,6 @@ def test_copy_object_diff_bucket():
         CopySource=copy_source
     )
     assert response
-'''
 
 def test_put_object_acl():
     """设置object acl"""

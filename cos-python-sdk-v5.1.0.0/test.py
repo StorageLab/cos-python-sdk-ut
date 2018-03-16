@@ -12,8 +12,8 @@ from qcloud_cos import CosServiceError
 SECRET_ID = os.environ["SECRET_ID"]
 SECRET_KEY = os.environ["SECRET_KEY"]
 region = os.environ["REGION"]
+test_bucket = "python-v5-test"
 appid = os.environ["APPID"]
-test_bucket = os.environ["BUCKET"]
 test_object = "test.txt"
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 conf = CosConfig(

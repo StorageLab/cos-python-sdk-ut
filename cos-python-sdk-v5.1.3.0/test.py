@@ -12,7 +12,8 @@ from qcloud_cos import CosServiceError
 SECRET_ID = os.environ["SECRET_ID"]
 SECRET_KEY = os.environ["SECRET_KEY"]
 region = os.environ["REGION"]
-test_bucket = os.environ["BUCKET"]
+appid = os.environ["APPID"]
+test_bucket = "python-v5-test" + "-" + appid
 test_object = "test.txt"
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 conf = CosConfig(
@@ -161,8 +162,7 @@ def test_get_object_acl():
     )
     assert response
 
-'''
-def skip_test_copy_object_diff_bucket():
+def test_copy_object_diff_bucket():
     """从另外的bucket拷贝object"""
     copy_source = {'Bucket': 'test04-1252448703', 'Key': '/test.txt', 'Region': 'ap-beijing-1'}
     response = client.copy_object(
@@ -171,7 +171,6 @@ def skip_test_copy_object_diff_bucket():
         CopySource=copy_source
     )
     assert response
-'''
 
 def test_create_abort_multipart_upload():
     """创建一个分块上传，然后终止它"""
@@ -229,8 +228,7 @@ def test_create_complete_multipart_upload():
         MultipartUpload={'Part': lst}
     )
 
-'''
-def skip_test_upload_part_copy():
+def test_upload_part_copy():
     """创建一个分块上传，上传分块拷贝，列出分块，完成分块上传"""
     # create
     response = client.create_multipart_upload(
@@ -278,7 +276,6 @@ def skip_test_upload_part_copy():
         UploadId=uploadid,
         MultipartUpload={'Part': lst}
     )
-'''
 
 def test_delete_multiple_objects():
     """批量删除文件"""
@@ -298,7 +295,7 @@ def test_delete_multiple_objects():
     )
     assert response2
     objects = {
-        "Quite": "true",
+        "Quite": "false",
         "Object": [
             {
                 "Key": file_name1
@@ -318,7 +315,7 @@ def test_delete_multiple_objects():
 def test_create_head_delete_bucket():
     """创建一个bucket,head它是否存在,最后删除一个空bucket"""
     bucket_id = str(random.randint(0, 1000)) + str(random.randint(0, 1000))
-    bucket_name = 'buckettest' + bucket_id + '-1252448703'
+    bucket_name = 'buckettest' + bucket_id + '-' + appid
     response = client.create_bucket(
         Bucket=bucket_name,
         ACL='public-read'
@@ -563,8 +560,7 @@ def test_upload_file_multithreading():
         os.remove(file_name)
     print ed - st
 
-'''
-def skip_test_copy_file_automatically():
+def test_copy_file_automatically():
     """根据拷贝源文件的大小自动选择拷贝策略，不同园区,小于5G直接copy_object，大于5G分块拷贝"""
     copy_source = {'Bucket': 'testtiedu-1252448703', 'Key': '/thread_1MB', 'Region': 'ap-guangzhou'}
     response = client.copy(
@@ -573,7 +569,6 @@ def skip_test_copy_file_automatically():
         CopySource=copy_source,
         MAXThread=10
     )
-'''
 
 def test_upload_empty_file():
     """上传一个空文件,不能返回411错误"""
@@ -589,17 +584,15 @@ def test_upload_empty_file():
             ContentDisposition='download.txt'
         )
 
-'''
-def skip_test_copy_10G_file_in_same_region():
+def test_copy_10G_file_in_same_region():
     """同园区的拷贝,应该直接用copy_object接口,可以直接秒传"""
-    copy_source = {'Bucket': 'testv5-1252448703', 'Key': '10G.txt', 'Region': 'yfb'}
+    copy_source = {'Bucket': test_bucket, 'Key': 'copy_10G.txt', 'Region': 'yfb'}
     response = client.copy(
-        Bucket='testcopy-1252448703',
+        Bucket=test_bucket,
         Key='10G.txt',
         CopySource=copy_source,
         MAXThread=10
     )
-'''
 
 def test_use_get_auth():
     """测试利用get_auth方法直接生产签名,然后访问COS"""
@@ -609,7 +602,8 @@ def test_use_get_auth():
         Key='test.txt',
         Params={'acl': '', 'unsed': '123'}
     )
-    response = requests.get('http://test01-1252448703.cos.ap-beijing-1.myqcloud.com/test.txt?acl&unsed=123', headers={'Authorization': auth})
+    url = 'http://{bucket}.cos.{region}.myqcloud.com/test.txt?acl&unsed=123'.format(bucket=test_bucket, region=region)
+    response = requests.get(url, headers={'Authorization': auth})
     assert response.status_code == 200
 
 
