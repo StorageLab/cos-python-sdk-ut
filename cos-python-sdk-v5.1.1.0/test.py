@@ -12,7 +12,7 @@ from qcloud_cos import CosServiceError
 SECRET_ID = os.environ["SECRET_ID"]
 SECRET_KEY = os.environ["SECRET_KEY"]
 region = os.environ["REGION"]
-test_bucket = "python-v5-test"
+test_bucket = "python-v5-test-" + region
 appid = os.environ["APPID"]
 test_object = "test.txt"
 special_file_name = "中文" + "→↓←→↖↗↙↘! \"#$%&'()*+,-./0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -49,8 +49,22 @@ def print_error_msg(e):
     print e.get_request_id()
 
 
+def _creat_test_bucket(test_bucket):
+    try:
+        response = client.create_bucket(
+            Bucket=test_bucket,
+        )
+    except Exception as e:
+        if e.get_error_code() == 'BucketAlreadyOwnedByYou':
+            print 'BucketAlreadyOwnedByYou'
+        else:
+            raise e
+
+
 def setUp():
     print "start test..."
+    print "start create bucket " + test_bucket
+    _creat_test_bucket(test_bucket)
 
 
 def tearDown():
@@ -199,6 +213,7 @@ def test_create_complete_multipart_upload():
         UploadId=uploadid,
         MultipartUpload={'Part': lst}
     )
+
 
 def test_create_delete_bucket():
     """创建一个bucket,最后删除一个空bucket"""
