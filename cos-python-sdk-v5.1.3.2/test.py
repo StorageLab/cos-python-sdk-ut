@@ -116,6 +116,92 @@ def test_put_get_delete_object_10MB():
         os.remove(file_name)
 
 
+def test_put_object_contains_x_cos_meta():
+    """上传带上自定义头部x-cos"""
+    response = client.put_object(
+        Bucket=test_bucket,
+        Body='T'*1024*1024,
+        Key=test_object,
+        CacheControl='no-cache',
+        ContentDisposition='download.txt',
+        Metadata={'x-cos-meta-test': 'testtiedu'}
+    )
+    assert response
+    response = client.get_object(
+        Bucket=test_bucket,
+        Key=test_object,
+    )
+    assert response['x-cos-meta-test'] == 'testtiedu'
+
+
+def test_get_object_if_match_true():
+    """下载文件if-match成立"""
+    response = client.head_object(
+        Bucket=test_bucket,
+        Key=test_object
+    )
+    etag = response['Etag']
+
+    response = client.get_object(
+        Bucket=test_bucket,
+        Key=test_object,
+        IfMatch=etag
+    )
+
+
+def test_get_object_if_match_false():
+    """下载文件if-match不成立"""
+    etag = '"121313131"'
+    try:
+        response = client.get_object(
+            Bucket=test_bucket,
+            Key=test_object,
+            IfMatch=etag
+        )
+    except Exception as e:
+        assert "PreconditionFailed" == e.get_error_code()
+
+
+def test_get_object_if_none_match_true():
+    """下载文件if-none-match成立"""
+    etag = '"121313131"'
+    response = client.get_object(
+        Bucket=test_bucket,
+        Key=test_object,
+        IfNoneMatch=etag
+    )
+
+
+def test_get_object_if_none_match_false():
+    """下载文件if-none-match不成立"""
+    response = client.head_object(
+        Bucket=test_bucket,
+        Key=test_object
+    )
+
+    etag = response['Etag']
+    """有bug"""
+    try:
+        response = client.get_object(
+            Bucket=test_bucket,
+            Key=test_object,
+            IfNoneMatch=etag
+        )
+    except Exception as e:
+        print str(e)
+
+
+def test_get_object_non_exist():
+    """特殊字符文件下载"""
+    try:
+        response = client.get_object(
+            Bucket=test_bucket,
+            Key='not_exist.txt'
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchKey'
+
+
 def test_put_object_speacil_names():
     """特殊字符文件上传"""
     response = client.put_object(
@@ -277,7 +363,8 @@ def test_upload_part_copy():
         Key='multipartfile.txt',
         UploadId=uploadid,
         PartNumber=3,
-        CopySource=copy_source
+        CopySource=copy_source,
+        CopySourceRange='bytes=0-2'
     )
     # list parts
     response = client.list_parts(
@@ -591,7 +678,7 @@ def test_copy_file_automatically():
 
 
 def test_upload_empty_file():
-    """上传一个空文件,不能返回411错误"""
+    """上传一个空文件,不能返回411错误,然后下载这个文件"""
     file_name = "empty.txt"
     with open(file_name, 'wb') as f:
         pass
@@ -603,6 +690,13 @@ def test_upload_empty_file():
             CacheControl='no-cache',
             ContentDisposition='download.txt'
         )
+    response = client.get_object(
+        Bucket=test_bucket,
+        Key=file_name,
+        ResponseCacheControl='no-cache',
+        ResponseContentDisposition='download.txt'
+    )
+    assert response
 
 
 def test_copy_10G_file_in_same_region():
