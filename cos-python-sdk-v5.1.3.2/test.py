@@ -599,6 +599,76 @@ def test_list_objects():
     assert response
 
 
+def test_list_objects_prefix_empty():
+    """list objects prefix指定为空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        Prefix=''
+    )
+    assert response
+
+
+def test_list_objects_encode_url():
+    """list objects encode指定为url"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        EncodingType='url'
+    )
+    assert response
+
+
+def test_list_objects_encode_empty():
+    """list objects encode指定为空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        EncodingType=''
+    )
+    assert response
+
+
+def test_list_objects_delimiter_empty():
+    """list objects delimiter指定为空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        Delimiter=''
+    )
+    assert response
+
+
+def test_list_objects_marker_empty():
+    """list objects maker指定为空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        Marker=''
+    )
+    assert response
+
+
+def test_list_objects_marker_not_empty():
+    """list objects marker指定为非空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        Marker='test.txt'
+    )
+    assert response
+
+
+def test_list_objects_max_keys_zero():
+    """prefix指定为非空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=0,
+        Marker='test.txt'
+    )
+    assert response
+
+
 def test_list_objects_empty_bucket():
     """列出bucket下的objects为空的情况"""
     bucket = 'empty-' + test_bucket
@@ -611,6 +681,17 @@ def test_list_objects_empty_bucket():
     response = client.delete_bucket(
         Bucket=bucket
     )
+
+
+def test_list_objects_bucket_not_exist():
+    """列出bucket时bucket不存在的的情况"""
+    bucket = 'empty-' + test_bucket
+    try:
+        response = client.list_objects(
+            Bucket=bucket
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchBucket'
 
 
 def test_list_objects_versions():
