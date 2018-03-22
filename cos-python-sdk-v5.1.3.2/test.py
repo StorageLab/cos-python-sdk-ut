@@ -539,6 +539,36 @@ def test_create_head_delete_bucket():
     )
 
 
+def test_head_bucket_not_exist():
+    """head bucket不存在"""
+    try:
+        response = client.head_bucket(
+            Bucket="not-exist-"+test_bucket
+        )
+    except CosServiceError as e:
+        assert e.get_error_code() == 'NoSuchResource'
+
+
+def test_put_bucket_illegal():
+    """bucket名称非法返回错误"""
+    try:
+        response = client.create_bucket(
+            Bucket="123_"+test_bucket
+        )
+    except CosServiceError as e:
+        assert e.get_error_code() == 'InvalidBucketName'
+
+
+def test_put_bucket_illegal_bad_host():
+    """bucket名称以-开始解析host失败"""
+    try:
+        response = client.create_bucket(
+            Bucket="-123_"+test_bucket
+        )
+    except Exception as e:
+        print str(e)
+
+
 def test_put_bucket_acl_illegal():
     """设置非法的ACL"""
     try:
@@ -569,6 +599,20 @@ def test_list_objects():
     assert response
 
 
+def test_list_objects_empty_bucket():
+    """列出bucket下的objects为空的情况"""
+    bucket = 'empty-' + test_bucket
+    response = client.create_bucket(
+        Bucket=bucket
+    )
+    response = client.list_objects(
+        Bucket=bucket
+    )
+    response = client.delete_bucket(
+        Bucket=bucket
+    )
+
+
 def test_list_objects_versions():
     """列出bucket下的带版本信息的objects"""
     response = client.list_objects_versions(
@@ -596,10 +640,14 @@ def test_get_bucket_location():
     assert response['LocationConstraint'] == region
 
 
-def test_get_service():
-    """列出账号下所有的bucket信息"""
-    response = client.list_buckets()
-    assert response
+def test_get_bucket_location_bucket_not_exist():
+    """获取bucket的地域信息,bucket不存在"""
+    try:
+        response = client.get_bucket_location(
+            Bucket='not-exist-'+test_bucket
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchBucket'
 
 
 def test_put_get_delete_cors():
