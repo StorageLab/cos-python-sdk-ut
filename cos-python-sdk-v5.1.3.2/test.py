@@ -202,6 +202,17 @@ def test_get_object_non_exist():
         assert e.get_error_code() == 'NoSuchKey'
 
 
+def test_head_object_non_exist():
+    """特殊字符文件下载"""
+    try:
+        response = client.head_object(
+            Bucket=test_bucket,
+            Key='not_exist.txt'
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchResource'
+
+
 def test_put_object_speacil_names():
     """特殊字符文件上传"""
     response = client.put_object(
@@ -243,6 +254,25 @@ def test_put_object_non_exist_bucket():
         )
     except CosServiceError as e:
         print_error_msg(e)
+
+
+def test_head_object_contains_meta_data():
+    """head object,object包含x-cos-meta和各种元数据,指定响应头"""
+    response = client.put_object(
+         Bucket=test_bucket,
+         Body='X'*1024,
+         Key=test_object,
+         Metadata={'x-cos-meta-tiedu': 'dyw'},
+         CacheControl='no-cache',
+         ContentDisposition='download.txt'
+    )
+    assert response
+    response = client.head_object(
+         Bucket=test_bucket,
+         Key=test_object
+    )
+    assert response['x-cos-meta-tiedu'] == 'dyw'
+    assert response['Cache-Control'] == 'no-cache'
 
 
 def test_put_object_acl():
@@ -288,6 +318,60 @@ def test_create_abort_multipart_upload():
         Bucket=test_bucket,
         Key='multipartfile.txt',
         UploadId=uploadid
+    )
+
+
+def test_abort_multipart_upload_not_exist():
+    """abort一个不存在的uploadid，返回失败"""
+    uploadid = 'adadada12131312121cc'
+    try:
+        response = client.abort_multipart_upload(
+            Bucket=test_bucket,
+            Key='multipartfile.txt',
+            UploadId=uploadid
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchUpload'
+
+
+def test_create_complete_only_one_part_multipart_upload():
+    """创建一个分块上传，上传多个分块，完成分块上传时只指定一个分块"""
+    # create
+    response = client.create_multipart_upload(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+    )
+    uploadid = response['UploadId']
+    # upload part
+    response = client.upload_part(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+        UploadId=uploadid,
+        PartNumber=1,
+        Body='A'*1024*1024*2
+    )
+
+    response = client.upload_part(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+        UploadId=uploadid,
+        PartNumber=2,
+        Body='B'*1024*1024*2
+    )
+    # list parts
+    response = client.list_parts(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+        UploadId=uploadid,
+        MaxParts=1
+    )
+    lst = response['Part']
+    # complete
+    response = client.complete_multipart_upload(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+        UploadId=uploadid,
+        MultipartUpload={'Part': lst}
     )
 
 
@@ -379,6 +463,28 @@ def test_upload_part_copy():
         Key='multipartfile.txt',
         UploadId=uploadid,
         MultipartUpload={'Part': lst}
+    )
+
+
+def test_delete_multiple_objects_not_exist():
+    """批量删除文件不存在,返回正常"""
+    file_id = str(random.randint(0, 1000)) + str(random.randint(0, 1000))
+    file_name1 = "tmp" + file_id + "_delete1_not_exist"
+    file_name2 = "tmp" + file_id + "_delete2_not_exist"
+    objects = {
+        "Quite": "false",
+        "Object": [
+            {
+                "Key": file_name1
+            },
+            {
+                "Key": file_name2
+            }
+        ]
+    }
+    response = client.delete_objects(
+        Bucket=test_bucket,
+        Delete=objects
     )
 
 
@@ -666,6 +772,19 @@ def test_upload_file_multithreading():
     print ed - st
 
 
+def test_put_object_copy_source_not_exist():
+    """拷贝接口,源文件不存在"""
+    copy_source = {'Bucket': 'testtiedu-1252448703', 'Key': '/not_exist123.txt', 'Region': 'ap-guangzhou'}
+    try:
+        response = client.copy_object(
+            Bucket=test_bucket,
+            Key='copy_10G.txt',
+            CopySource=copy_source
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchKey'
+
+
 def test_copy_file_automatically():
     """根据拷贝源文件的大小自动选择拷贝策略，不同园区,小于5G直接copy_object，大于5G分块拷贝"""
     copy_source = {'Bucket': 'testtiedu-1252448703', 'Key': '/thread_1MB', 'Region': 'ap-guangzhou'}
@@ -696,6 +815,7 @@ def test_upload_empty_file():
         ResponseCacheControl='no-cache',
         ResponseContentDisposition='download.txt'
     )
+    response['Body'].get_stream_to_file('download_empty.txt')
     assert response
 
 
