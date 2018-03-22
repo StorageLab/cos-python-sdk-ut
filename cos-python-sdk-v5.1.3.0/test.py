@@ -116,6 +116,103 @@ def test_put_get_delete_object_10MB():
         os.remove(file_name)
 
 
+def test_put_object_contains_x_cos_meta():
+    """上传带上自定义头部x-cos"""
+    response = client.put_object(
+        Bucket=test_bucket,
+        Body='T'*1024*1024,
+        Key=test_object,
+        CacheControl='no-cache',
+        ContentDisposition='download.txt',
+        Metadata={'x-cos-meta-test': 'testtiedu'}
+    )
+    assert response
+    response = client.get_object(
+        Bucket=test_bucket,
+        Key=test_object,
+    )
+    assert response['x-cos-meta-test'] == 'testtiedu'
+
+
+def test_get_object_if_match_true():
+    """下载文件if-match成立"""
+    response = client.head_object(
+        Bucket=test_bucket,
+        Key=test_object
+    )
+    etag = response['Etag']
+
+    response = client.get_object(
+        Bucket=test_bucket,
+        Key=test_object,
+        IfMatch=etag
+    )
+
+
+def test_get_object_if_match_false():
+    """下载文件if-match不成立"""
+    etag = '"121313131"'
+    try:
+        response = client.get_object(
+            Bucket=test_bucket,
+            Key=test_object,
+            IfMatch=etag
+        )
+    except Exception as e:
+        assert "PreconditionFailed" == e.get_error_code()
+
+
+def test_get_object_if_none_match_true():
+    """下载文件if-none-match成立"""
+    etag = '"121313131"'
+    response = client.get_object(
+        Bucket=test_bucket,
+        Key=test_object,
+        IfNoneMatch=etag
+    )
+
+
+def test_get_object_if_none_match_false():
+    """下载文件if-none-match不成立"""
+    response = client.head_object(
+        Bucket=test_bucket,
+        Key=test_object
+    )
+
+    etag = response['Etag']
+    """有bug"""
+    try:
+        response = client.get_object(
+            Bucket=test_bucket,
+            Key=test_object,
+            IfNoneMatch=etag
+        )
+    except Exception as e:
+        print str(e)
+
+
+def test_get_object_non_exist():
+    """特殊字符文件下载"""
+    try:
+        response = client.get_object(
+            Bucket=test_bucket,
+            Key='not_exist.txt'
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchKey'
+
+
+def test_head_object_non_exist():
+    """特殊字符文件下载"""
+    try:
+        response = client.head_object(
+            Bucket=test_bucket,
+            Key='not_exist.txt'
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchResource'
+
+
 def test_put_object_speacil_names():
     """特殊字符文件上传"""
     response = client.put_object(
@@ -157,6 +254,25 @@ def test_put_object_non_exist_bucket():
         )
     except CosServiceError as e:
         print_error_msg(e)
+
+
+def test_head_object_contains_meta_data():
+    """head object,object包含x-cos-meta和各种元数据,指定响应头"""
+    response = client.put_object(
+         Bucket=test_bucket,
+         Body='X'*1024,
+         Key=test_object,
+         Metadata={'x-cos-meta-tiedu': 'dyw'},
+         CacheControl='no-cache',
+         ContentDisposition='download.txt'
+    )
+    assert response
+    response = client.head_object(
+         Bucket=test_bucket,
+         Key=test_object
+    )
+    assert response['x-cos-meta-tiedu'] == 'dyw'
+    assert response['Cache-Control'] == 'no-cache'
 
 
 def test_put_object_acl():
@@ -202,6 +318,60 @@ def test_create_abort_multipart_upload():
         Bucket=test_bucket,
         Key='multipartfile.txt',
         UploadId=uploadid
+    )
+
+
+def test_abort_multipart_upload_not_exist():
+    """abort一个不存在的uploadid，返回失败"""
+    uploadid = 'adadada12131312121cc'
+    try:
+        response = client.abort_multipart_upload(
+            Bucket=test_bucket,
+            Key='multipartfile.txt',
+            UploadId=uploadid
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchUpload'
+
+
+def test_create_complete_only_one_part_multipart_upload():
+    """创建一个分块上传，上传多个分块，完成分块上传时只指定一个分块"""
+    # create
+    response = client.create_multipart_upload(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+    )
+    uploadid = response['UploadId']
+    # upload part
+    response = client.upload_part(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+        UploadId=uploadid,
+        PartNumber=1,
+        Body='A'*1024*1024*2
+    )
+
+    response = client.upload_part(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+        UploadId=uploadid,
+        PartNumber=2,
+        Body='B'*1024*1024*2
+    )
+    # list parts
+    response = client.list_parts(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+        UploadId=uploadid,
+        MaxParts=1
+    )
+    lst = response['Part']
+    # complete
+    response = client.complete_multipart_upload(
+        Bucket=test_bucket,
+        Key='multipartfile.txt',
+        UploadId=uploadid,
+        MultipartUpload={'Part': lst}
     )
 
 
@@ -277,7 +447,8 @@ def test_upload_part_copy():
         Key='multipartfile.txt',
         UploadId=uploadid,
         PartNumber=3,
-        CopySource=copy_source
+        CopySource=copy_source,
+        CopySourceRange='bytes=0-2'
     )
     # list parts
     response = client.list_parts(
@@ -292,6 +463,28 @@ def test_upload_part_copy():
         Key='multipartfile.txt',
         UploadId=uploadid,
         MultipartUpload={'Part': lst}
+    )
+
+
+def test_delete_multiple_objects_not_exist():
+    """批量删除文件不存在,返回正常"""
+    file_id = str(random.randint(0, 1000)) + str(random.randint(0, 1000))
+    file_name1 = "tmp" + file_id + "_delete1_not_exist"
+    file_name2 = "tmp" + file_id + "_delete2_not_exist"
+    objects = {
+        "Quite": "false",
+        "Object": [
+            {
+                "Key": file_name1
+            },
+            {
+                "Key": file_name2
+            }
+        ]
+    }
+    response = client.delete_objects(
+        Bucket=test_bucket,
+        Delete=objects
     )
 
 
@@ -346,6 +539,36 @@ def test_create_head_delete_bucket():
     )
 
 
+def test_head_bucket_not_exist():
+    """head bucket不存在"""
+    try:
+        response = client.head_bucket(
+            Bucket="not-exist-"+test_bucket
+        )
+    except CosServiceError as e:
+        assert e.get_error_code() == 'NoSuchResource'
+
+
+def test_put_bucket_illegal():
+    """bucket名称非法返回错误"""
+    try:
+        response = client.create_bucket(
+            Bucket="123_"+test_bucket
+        )
+    except CosServiceError as e:
+        assert e.get_error_code() == 'InvalidBucketName'
+
+
+def test_put_bucket_illegal_bad_host():
+    """bucket名称以-开始解析host失败"""
+    try:
+        response = client.create_bucket(
+            Bucket="-123_"+test_bucket
+        )
+    except Exception as e:
+        print str(e)
+
+
 def test_put_bucket_acl_illegal():
     """设置非法的ACL"""
     try:
@@ -376,6 +599,101 @@ def test_list_objects():
     assert response
 
 
+def test_list_objects_prefix_empty():
+    """list objects prefix指定为空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        Prefix=''
+    )
+    assert response
+
+
+def test_list_objects_encode_url():
+    """list objects encode指定为url"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        EncodingType='url'
+    )
+    assert response
+
+
+def test_list_objects_encode_empty():
+    """list objects encode指定为空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        EncodingType=''
+    )
+    assert response
+
+
+def test_list_objects_delimiter_empty():
+    """list objects delimiter指定为空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        Delimiter=''
+    )
+    assert response
+
+
+def test_list_objects_marker_empty():
+    """list objects maker指定为空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        Marker=''
+    )
+    assert response
+
+
+def test_list_objects_marker_not_empty():
+    """list objects marker指定为非空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=100,
+        Marker='test.txt'
+    )
+    assert response
+
+
+def test_list_objects_max_keys_zero():
+    """prefix指定为非空"""
+    response = client.list_objects(
+        Bucket=test_bucket,
+        MaxKeys=0,
+        Marker='test.txt'
+    )
+    assert response
+
+
+def test_list_objects_empty_bucket():
+    """列出bucket下的objects为空的情况"""
+    bucket = 'empty-' + test_bucket
+    response = client.create_bucket(
+        Bucket=bucket
+    )
+    response = client.list_objects(
+        Bucket=bucket
+    )
+    response = client.delete_bucket(
+        Bucket=bucket
+    )
+
+
+def test_list_objects_bucket_not_exist():
+    """列出bucket时bucket不存在的的情况"""
+    bucket = 'empty-' + test_bucket
+    try:
+        response = client.list_objects(
+            Bucket=bucket
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchBucket'
+
+
 def test_list_objects_versions():
     """列出bucket下的带版本信息的objects"""
     response = client.list_objects_versions(
@@ -403,10 +721,14 @@ def test_get_bucket_location():
     assert response['LocationConstraint'] == region
 
 
-def test_get_service():
-    """列出账号下所有的bucket信息"""
-    response = client.list_buckets()
-    assert response
+def test_get_bucket_location_bucket_not_exist():
+    """获取bucket的地域信息,bucket不存在"""
+    try:
+        response = client.get_bucket_location(
+            Bucket='not-exist-'+test_bucket
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchBucket'
 
 
 def test_put_get_delete_cors():
@@ -579,6 +901,19 @@ def test_upload_file_multithreading():
     print ed - st
 
 
+def test_put_object_copy_source_not_exist():
+    """拷贝接口,源文件不存在"""
+    copy_source = {'Bucket': 'testtiedu-1252448703', 'Key': '/not_exist123.txt', 'Region': 'ap-guangzhou'}
+    try:
+        response = client.copy_object(
+            Bucket=test_bucket,
+            Key='copy_10G.txt',
+            CopySource=copy_source
+        )
+    except Exception as e:
+        assert e.get_error_code() == 'NoSuchKey'
+
+
 def test_copy_file_automatically():
     """根据拷贝源文件的大小自动选择拷贝策略，不同园区,小于5G直接copy_object，大于5G分块拷贝"""
     copy_source = {'Bucket': 'testtiedu-1252448703', 'Key': '/thread_1MB', 'Region': 'ap-guangzhou'}
@@ -591,7 +926,7 @@ def test_copy_file_automatically():
 
 
 def test_upload_empty_file():
-    """上传一个空文件,不能返回411错误"""
+    """上传一个空文件,不能返回411错误,然后下载这个文件"""
     file_name = "empty.txt"
     with open(file_name, 'wb') as f:
         pass
@@ -603,6 +938,14 @@ def test_upload_empty_file():
             CacheControl='no-cache',
             ContentDisposition='download.txt'
         )
+    response = client.get_object(
+        Bucket=test_bucket,
+        Key=file_name,
+        ResponseCacheControl='no-cache',
+        ResponseContentDisposition='download.txt'
+    )
+    response['Body'].get_stream_to_file('download_empty.txt')
+    assert response
 
 
 def test_copy_10G_file_in_same_region():
