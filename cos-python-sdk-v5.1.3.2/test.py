@@ -673,9 +673,7 @@ def test_list_objects_max_keys_zero():
 def test_list_objects_empty_bucket():
     """列出bucket下的objects为空的情况"""
     bucket = 'empty-' + test_bucket
-    response = _create_test_bucket(
-        Bucket=bucket
-    )
+    response = _create_test_bucket(bucket)
     response = client.list_objects(
         Bucket=bucket
     )
