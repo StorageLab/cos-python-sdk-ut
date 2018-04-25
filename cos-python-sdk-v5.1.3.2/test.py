@@ -48,7 +48,7 @@ def print_error_msg(e):
     print e.get_request_id()
 
 
-def _creat_test_bucket(test_bucket):
+def _create_test_bucket(test_bucket):
     try:
         response = client.create_bucket(
             Bucket=test_bucket,
@@ -58,12 +58,13 @@ def _creat_test_bucket(test_bucket):
             print 'BucketAlreadyOwnedByYou'
         else:
             raise e
+    return None
 
 
 def setUp():
     print "start test..."
     print "start create bucket " + test_bucket
-    _creat_test_bucket(test_bucket)
+    _create_test_bucket(test_bucket)
 
 
 def tearDown():
@@ -672,7 +673,7 @@ def test_list_objects_max_keys_zero():
 def test_list_objects_empty_bucket():
     """列出bucket下的objects为空的情况"""
     bucket = 'empty-' + test_bucket
-    response = client.create_bucket(
+    response = _create_test_bucket(
         Bucket=bucket
     )
     response = client.list_objects(
@@ -685,7 +686,7 @@ def test_list_objects_empty_bucket():
 
 def test_list_objects_bucket_not_exist():
     """列出bucket时bucket不存在的的情况"""
-    bucket = 'empty-' + test_bucket
+    bucket = 'not-exist-' + test_bucket
     try:
         response = client.list_objects(
             Bucket=bucket
